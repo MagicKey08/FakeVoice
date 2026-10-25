@@ -50,6 +50,12 @@ This is a Vencord **userplugin**, so it is not in the official plugin list. You 
    ```
 4. Start Discord and enable **FakeVoice** under Settings -> Vencord -> Plugins.
 
+## Compatibility
+
+Tested on Windows with a Vencord source build in the Discord desktop app (stable), October 2026.
+
+Discord updates can break plugin patches at any time. If something stops working, please [open an issue](https://github.com/MagicKey08/FakeVoice/issues/new/choose) and include your Vencord version and Discord build (Settings -> scroll to the bottom of the left sidebar).
+
 ## Credits
 
 The idea of a fake mute/deafen toggle goes back to the (now broken) [FakeVoiceOptions](https://github.com/eightcon/FakeVoiceOptions) plugin. This is an independent rewrite for current Vencord, with the control moved into the deafen button's own menu.

@@ -1,8 +1,8 @@
 /*
  * FakeVoice, a Vencord userplugin
- * Zeigt anderen an, dass du gemutet oder taub geschaltet bist,
- * obwohl du weiter hörst (und bei Fake Mute auch weiter sprichst).
- * Steuerung über das Rechtsklick-Menü des normalen Deafen-Buttons.
+ * Shows others that you are muted or deafened while you keep hearing
+ * (and, with Fake Mute, keep talking). Controlled from the right-click
+ * menu of the normal deafen button.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
@@ -21,19 +21,19 @@ const VoiceActions = findByPropsLazy("toggleSelfMute", "toggleSelfDeaf");
 export const settings = definePluginSettings({
     fakeDeafen: {
         type: OptionType.BOOLEAN,
-        description: "Fake Deafen: Andere sehen dich taub geschaltet (und gemutet), du hörst aber weiter alles.",
+        description: "Fake Deafen: others see you deafened (and muted), but you still hear everything.",
         default: false,
         onChange: () => resendVoiceState()
     },
     fakeMute: {
         type: OptionType.BOOLEAN,
-        description: "Fake Mute: Andere sehen dich gemutet, dein Mikro bleibt aber an.",
+        description: "Fake Mute: others see you muted, but your microphone stays live.",
         default: false,
         onChange: () => resendVoiceState()
     }
 });
 
-/* ---------------- Kernlogik ---------------- */
+/* ---------------- Core logic ---------------- */
 
 function applyOverrides(payload: any) {
     if (!payload || typeof payload !== "object" || !("self_deaf" in payload || "self_mute" in payload)) return payload;
@@ -122,7 +122,7 @@ function sendOnce(attempt: number) {
     hookSocket();
     try {
         if (attempt < 2 && socket && lastRawPayload && originalSend) {
-            // Kopie schicken, der Wrapper wendet die aktuellen Overrides selbst an
+            // send a copy, the wrapper applies the current overrides itself
             socket.send(VOICE_STATE_UPDATE_OP, { ...lastRawPayload });
             return;
         }
@@ -133,7 +133,7 @@ function sendOnce(attempt: number) {
     } catch (e) {
         logger.error("Resending voice state failed", e);
     }
-    // Fallback: zweimal kurz umschalten, dadurch schickt Discord den Status selbst neu
+    // fallback: toggle twice quickly so Discord re-sends the state itself
     try {
         VoiceActions.toggleSelfMute();
         setTimeout(() => VoiceActions.toggleSelfMute(), 200);
@@ -145,7 +145,7 @@ function sendOnce(attempt: number) {
 let resendTimer: any = null;
 let verifyTimer: any = null;
 
-/** Schickt den aktuellen Sprachstatus erneut an Discord und prüft danach, ob er angekommen ist. */
+/** Re-sends the current voice state to Discord and then checks that it arrived. */
 function resendVoiceState(attempt = 0) {
     clearTimeout(resendTimer);
     clearTimeout(verifyTimer);
@@ -193,13 +193,13 @@ const DeafenMenu = ErrorBoundary.wrap(DeafenMenuInner, {
 
 export default definePlugin({
     name: "FakeVoice",
-    description: "Fake Mute und Fake Deafen über das Rechtsklick-Menü des normalen Deafen-Buttons. Andere sehen dich gemutet oder taub, du hörst und sprichst aber weiter.",
-    authors: [{ name: "Kjell", id: 0n }],
+    description: "Fake Mute and Fake Deafen in the right-click menu of the normal deafen button. Others see you muted or deafened while you keep hearing and talking.",
+    authors: [{ name: "MagicKey08", id: 1103681094089449565n }],
     tags: ["Voice"],
     settings,
 
     patches: [
-        // Discords voiceStateUpdate umschreiben, damit der gefälschte Status rausgeht
+        // rewrite Discord's voiceStateUpdate so the faked state is sent
         {
             find: "}voiceStateUpdate(",
             noWarn: true,
@@ -208,7 +208,7 @@ export default definePlugin({
                 replace: "self_mute:$self.overrideMute($1),self_deaf:$self.overrideDeaf($2)"
             }
         },
-        // Rechtsklick-Popout des Deafen-Buttons: unsere Schalter vor Discords Audiogeräte-Menü
+        // right-click popout of the deafen button: our toggles go above Discord's audio device menu
         {
             find: "renderOutputDevices:!0",
             replacement: {
